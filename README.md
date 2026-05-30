@@ -27,27 +27,24 @@ This project brings Night Owl's signature cool tones and soft contrasts to your 
 ```text
 night-owl-cli/
 │
-├── delta/
-│   └── night-owl-delta.ini
-├── git/
-│   └── night-owl-colors.gitconfig
-├── bat/
-│   └── Night-Owl.tmTheme
-├── eza/
-│   └── night-owl.yml
-├── k9s/
-│   └── night-owl.yaml
-├── fzf/
-│   └── fzf-night-owl.zsh
-├── iterm2/
-│   └── Night-Owl.itermcolors
-├── tmux/
-│   └── .tmux.conf
+├── delta/night-owl-delta.ini
+├── git/night-owl-colors.gitconfig
+├── bat/Night-Owl.tmTheme
+├── eza/night-owl.yml
+├── k9s/night-owl.yaml
+├── fzf/fzf-night-owl.zsh
+├── iterm2/Night-Owl.itermcolors
+├── tmux/night-owl.tmux
 ├── starship/
 │   ├── starship.toml
 │   └── random_emoji_cmd.sh
 │
-└── install.sh
+├── scripts/
+│   ├── manifest.sh        # single source of truth: what installs where
+│   └── check-palette.sh   # palette drift guard (run in CI)
+├── PALETTE.md             # canonical colour reference
+├── install.sh
+└── uninstall.sh
 ```
 
 ## 🔧 Setup Instructions
@@ -63,8 +60,9 @@ A helper script is available for auto-installation of supported components:
 This script:
 
 - Installs each theme **only if the related tool is installed**
-- Backs up your config file if it already exists
-- Symlinks or copies the Night Owl config into proper location
+- Backs up an existing, differing config once (`.bak`) before replacing it
+- Symlinks (or copies, where the tool needs a real file) into the right location
+- Is **safe to re-run** — it won't pile up backups of its own files
 
 > ⚠️ If you already have custom config for any tool, **review and merge manually**.
 > Do **not run blindly** unless you're fully aware of the changes.
@@ -139,13 +137,18 @@ When in doubt: **install one tool at a time by following the steps below.**
 
 ### 🛁 k9s
 
-1. Copy `k9s/night-owl.yaml` to `~/.k9s/skins/night-owl.yaml`
-2. In `~/.k9s/config.yaml`:
+1. Copy `k9s/night-owl.yaml` to `~/.config/k9s/skins/night-owl.yaml`
+   (the installer uses `$XDG_CONFIG_HOME/k9s/skins/`; run `k9s info` to confirm
+   your skins dir if it differs)
+2. Point k9s at the skin in its `config.yaml`. Recent k9s (v0.30+):
 
    ```yaml
    k9s:
-     skin: night-owl
+     ui:
+       skin: night-owl
    ```
+
+   Older k9s versions use a top-level `k9s.skin: night-owl`.
 
 ![Preview](./screenshots/k9s-preview.png)
 
@@ -153,10 +156,11 @@ When in doubt: **install one tool at a time by following the steps below.**
 
 ### 🧬 fzf
 
-1. Source the file in your `.zshrc`:
+1. The installer places the file at `~/.config/zsh/tools/fzf-night-owl.zsh`.
+   Source it from your shell config (`.zshrc`):
 
    ```sh
-   source "$ZDOTDIR/tools/fzf-night-owl.zsh"
+   source ~/.config/zsh/tools/fzf-night-owl.zsh
    ```
 
 ![Preview](./screenshots/fzf-preview.png)
@@ -175,8 +179,20 @@ When in doubt: **install one tool at a time by following the steps below.**
 
 ### 🧪 tmux
 
-1. Source `tmux/.tmux.conf` or merge into your own `.tmux.conf`
-2. Reload: `tmux source-file ~/.tmux.conf`
+The tmux theme is **colours only** — it does not touch your prefix key or other
+settings, and the installer never overwrites your `~/.tmux.conf`.
+
+1. The installer places `tmux/night-owl.tmux` at `~/.config/tmux/night-owl.tmux`.
+2. Source it from your own `~/.tmux.conf`:
+
+   ```tmux
+   source-file ~/.config/tmux/night-owl.tmux
+   ```
+
+3. Reload: `tmux source-file ~/.tmux.conf`
+
+> Night Owl uses 24-bit hex colours. For exact rendering, enable truecolor:
+> `set -as terminal-features ",*:RGB"`
 
 ![Preview](./screenshots/tmux-preview.png)
 
@@ -185,11 +201,12 @@ When in doubt: **install one tool at a time by following the steps below.**
 ### 🚀 starship
 
 1. Replace or merge into `~/.config/starship.toml`
-2. Place `random_emoji_cmd.sh` at `~/.config/zsh/tools/random_emoji_cmd.sh`  
-   (or update the path in `starship.toml` if you use a different location)
+2. `random_emoji_cmd.sh` powers the `[custom.emoji]` prompt segment. `install.sh`
+   copies it to `~/.config/zsh/tools/random_emoji_cmd.sh` and marks it executable
+   automatically. Installing `starship.toml` by hand? Place the script there
+   yourself and `chmod +x` it, or update the path in `starship.toml`.
 
-> This script generates a random emoji for each prompt refresh 🎲  
-> Don’t forget to `chmod +x` it!
+> This script generates a random emoji for each prompt refresh 🎲
 
 ![Preview](./screenshots/starship-preview.png)
 
@@ -221,6 +238,21 @@ To preview what would be removed without making changes:
 
 This script only affects files created by install.sh. If you've merged configs manually,
 please review them before running uninstall.
+
+## 🛠 Development
+
+The colour set lives in [`PALETTE.md`](PALETTE.md) and what-installs-where lives
+in [`scripts/manifest.sh`](scripts/manifest.sh) — both single sources of truth.
+One script runs every check (shellcheck, shfmt, palette drift, dry-run smoke),
+locally and in CI (`.github/workflows/ci.yml`):
+
+```bash
+./scripts/check.sh          # needs shellcheck + shfmt on PATH
+```
+
+**Adding a new tool** is one line in `scripts/manifest.sh`
+(`key|command|source|destination|mode`), shared by install and uninstall. See
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 🪪 License
 

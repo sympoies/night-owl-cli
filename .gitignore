@@ -1,0 +1,5 @@
+# macOS
+.DS_Store
+
+# Backups created by install.sh in a user's config dir (should never be committed)
+*.bak
