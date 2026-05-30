@@ -41,7 +41,11 @@ night-owl-cli/
 │
 ├── scripts/
 │   ├── manifest.sh        # single source of truth: what installs where
-│   └── check-palette.sh   # palette drift guard (run in CI)
+│   ├── check.sh           # one entrypoint for all checks (local + CI)
+│   ├── check-palette.sh   # palette drift guard
+│   └── check-iterm.py     # iTerm2 palette cross-check
+├── tests/
+│   └── install.bats       # install/uninstall round-trip tests
 ├── PALETTE.md             # canonical colour reference
 ├── install.sh
 └── uninstall.sh
@@ -243,11 +247,12 @@ please review them before running uninstall.
 
 The colour set lives in [`PALETTE.md`](PALETTE.md) and what-installs-where lives
 in [`scripts/manifest.sh`](scripts/manifest.sh) — both single sources of truth.
-One script runs every check (shellcheck, shfmt, palette drift, dry-run smoke),
-locally and in CI (`.github/workflows/ci.yml`):
+One script runs every check (shellcheck, shfmt, palette drift, iTerm2 palette
+cross-check, install/uninstall round-trip tests, dry-run smoke), locally and in
+CI (`.github/workflows/ci.yml`):
 
 ```bash
-./scripts/check.sh          # needs shellcheck + shfmt on PATH
+./scripts/check.sh          # needs shellcheck, shfmt (+ bats, python3 for the full set)
 ```
 
 **Adding a new tool** is one line in `scripts/manifest.sh`

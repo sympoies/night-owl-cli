@@ -5,15 +5,17 @@ has two single sources of truth — keep them honest and CI stays green.
 
 ## Local checks
 
-One script runs everything CI runs (shellcheck, shfmt, palette drift, dry-run
+One script runs everything CI runs (shellcheck, shfmt, palette drift, iTerm2
+palette cross-check, install/uninstall round-trip tests in `tests/`, dry-run
 smoke). Run it before opening a PR:
 
 ```bash
 ./scripts/check.sh
 ```
 
-It needs `shellcheck` and `shfmt` on `PATH`. To auto-fix formatting:
-`shfmt -w -i 2 -ci install.sh uninstall.sh scripts/*.sh`.
+It needs `shellcheck` and `shfmt` on `PATH`; the bats tests and iTerm2 check are
+skipped locally if `bats` / `python3` are absent, but CI always runs them. To
+auto-fix formatting: `shfmt -w -i 2 -ci install.sh uninstall.sh scripts/*.sh`.
 
 ## Colours
 
@@ -23,6 +25,10 @@ Introducing a new shade? Update both in the same PR, or the drift check fails.
 
 Prefer the core palette. Only add a derived shade when a tool genuinely needs
 one (e.g. delta's diff-background blends), and note where/why in `PALETTE.md`.
+
+Editing the iTerm2 theme (`iterm2/Night-Owl.itermcolors`)? Its colours are
+float RGB, checked separately by `scripts/check-iterm.py`. Update the `EXPECTED`
+map there and `PALETTE.md` to match.
 
 ## Adding a new tool
 

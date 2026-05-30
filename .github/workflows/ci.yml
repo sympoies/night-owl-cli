@@ -22,5 +22,8 @@ jobs:
           chmod +x /usr/local/bin/shfmt
           shfmt --version
 
+      - name: Install bats
+        run: sudo npm install -g bats
+
       - name: Run checks
         run: ./scripts/check.sh

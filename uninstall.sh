@@ -74,7 +74,7 @@ for entry in "${THEME_TOOLS[@]}"; do
 
   del "$dest"
   restore_bak "$dest"
-  [[ "$key" == "bat" ]] && bat_touched=true
+  if [[ "$key" == "bat" ]]; then bat_touched=true; fi
 done
 
 if [[ "$bat_touched" == true && "$DRY_RUN" == false ]]; then
@@ -87,4 +87,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 log "🧹 Uninstallation complete."
-[[ "$DRY_RUN" == true ]] && log "(This was a dry run — no files were actually removed.)"
+if [[ "$DRY_RUN" == true ]]; then
+  log "(This was a dry run — no files were actually removed.)"
+fi
